@@ -9,9 +9,6 @@ class TokenColor(Enum):
 
 class Token:
     """A Token in Expendibots game."""
-    __color = TokenColor.BLACK
-    x = 0
-    y = 0
 
     def __init__(self, x, y, __color=TokenColor.BLACK):
         self.x = x
