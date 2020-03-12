@@ -14,12 +14,3 @@ class TokenColor(Enum):
             return TokenColor.BLACK
         elif str.lower() == "white":
             return TokenColor.WHITE
-
-
-class Token:
-    """A Token in Expendibots game."""
-
-    def __init__(self, x, y, __color=TokenColor.BLACK):
-        self.x = x
-        self.y = y
-        self.__color = __color

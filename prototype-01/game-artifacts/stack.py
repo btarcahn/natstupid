@@ -2,7 +2,7 @@ class Stack:
     """Lightweight representation of a stack data structure.
     Reference: https://runestone.academy/runestone/books/published/pythonds/BasicDS/ImplementingaStackinPython.html
     """
-    def __init__(self):
+    def __init__(self, n=0):
         self.__items = []
 
     def is_empty(self):
