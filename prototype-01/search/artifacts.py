@@ -43,7 +43,7 @@ class TokenColor(Enum):
 class Board:
     """Represents the Board in the game."""
 
-    def __init__(self, json_string="", board_size=8):
+    def __init__(self, json_string='', board_size=8):
         """
         Draws a board and initializes all tokens on this board, by
         the directions given in the json string format.
