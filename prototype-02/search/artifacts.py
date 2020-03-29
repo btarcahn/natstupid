@@ -18,6 +18,7 @@ __email__ = 'b.tran17@student.unimelb.edu.au'
 class Board:
     """
     Represents a board of the game, technically a 8 x 8 matrix.
+    :param data: the dictionary provided as in __main.py__ file
     """
     def __init__(self, data):
         self.board = [[[None, 0] for j in range(0, 7)] for i in range(0, 7)]
@@ -49,3 +50,21 @@ class Board:
         """
         util_print_board(board_dict=self.to_printable_dict(),
                          message="instance")
+
+    def boom(self, start_x, start_y):
+        """
+        Initiates an EXPLOSION with a starting point.
+        :param start_x: the x-coordinate of the starting point
+        :param start_y: the y-coordinate of the starting point.
+        """
+        self.board[start_x][start_y] = [None, 0]
+        if 0 < start_x < 7 and 0 < start_y < 7:
+            self.boom(start_x+1, y)
+            self.boom(start_x-1, y)
+            self.boom(start_x, y+1)
+            self.boom(start_x, y-1)
+            self.boom(start_x+1, start_y+1)
+            self.boom(start_x-1, start_y-1)
+            self.boom(start_x+1, start_y-1)
+            self.boom(start_x-1, start_y+1)
+        # TODO enumerate other cases
