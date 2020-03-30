@@ -24,12 +24,11 @@ class Board:
     SIZE_INDEX = SIZE - 1
 
     def __init__(self, data):
-        self.board = [[None for j in range(0, Board.SIZE)] for i in range(0, Board.SIZE)]
-        whites = data['white']
-        blacks = data['black']
-        for pile in whites:
+        self.board = [[None for j in range(0, Board.SIZE)]
+                      for i in range(0, Board.SIZE)]
+        for pile in data['white']:
             self.board[pile[1]][pile[2]] = ['white', pile[0]]
-        for pile in blacks:
+        for pile in data['black']:
             self.board[pile[1]][pile[2]] = ['black', pile[0]]
 
     def __str__(self) -> str:
@@ -64,13 +63,15 @@ class Board:
         self.board[start_x][start_y] = None
 
         # Up, down, left, right corners
-        if start_y < Board.SIZE_INDEX and self.board[start_x][start_y + 1] is not None:
+        if start_y < Board.SIZE_INDEX \
+                and self.board[start_x][start_y + 1] is not None:
             self.boom(start_x, start_y + 1)
         if start_y > 0 and self.board[start_x][start_y - 1] is not None:
             self.boom(start_x, start_y - 1)
         if start_x > 0 and self.board[start_x - 1][start_y] is not None:
             self.boom(start_x - 1, start_y)
-        if start_x < Board.SIZE_INDEX and self.board[start_x + 1][start_y] is not None:
+        if start_x < Board.SIZE_INDEX \
+                and self.board[start_x + 1][start_y] is not None:
             self.boom(start_x + 1, start_y)
 
         # Diagonal corners
