@@ -8,8 +8,7 @@ Note: this file currently follows Python 3.Board.SIZE syntax.
 
 from .util import print_board as util_print_board
 from collections import defaultdict
-from math import sqrt
-from statistics import mean
+from queue import PriorityQueue
 
 __author__ = 'Natural Stupidity'
 __copyright__ = '© 2020 Natural Stupidity, Expendibots Game'
@@ -20,12 +19,18 @@ __email__ = 'b.tran17@student.unimelb.edu.au'
 class Board:
     """
     Represents a board of the game, technically a 8 x 8 matrix.
-    :param data: the dictionary provided as in __main.py__ file
+    This board supports basic actions as mentioned in the Expendibots
+    game, which are: moving horizontally or vertically, and the
+    boom action. All of these actions strictly follow the rules
+    of the Expendibots game.
     """
     SIZE = 8
     SIZE_INDEX = SIZE - 1
 
     def __init__(self, data):
+        """
+        :param data: the dictionary data type.
+        """
         self.board = [[None for j in range(0, Board.SIZE)]
                       for i in range(0, Board.SIZE)]
         for pile in data['white']:
@@ -174,26 +179,47 @@ class Board:
             raise IndexError('Invalid movement (opponent is present).')
 
     def classify_mark(self) -> dict:
-        coords = defaultdict()
+        coords = {'white': [], 'black': []}
         for i in range(0, Board.SIZE_INDEX):
             for j in range(0, Board.SIZE_INDEX):
                 if self.board[i][j] is None:
                     pass
                 elif self.board[i][j][0] == 'white':
-                    coords['white'] = (i, j)
+                    coords['white'].append((i, j))
                 elif self.board[i][j][0] == 'black':
-                    coords['black'] = (i, j)
+                    coords['black'].append((i, j))
         return coords
 
-    def dist_white_to_black(self):
-        # TODO have not test/documented this function
-        # TODO Probably it's wrong...
+    def heuristic(self):
         def dist(a, b):
+            print(a + '\n')
+            print(b + '\n')
             assert a is tuple and b is tuple
-            (x, y) = a
-            (u, v) = b
-            return sqrt((x - u) ** 2 + (y - v) ** 2)
+            (x1, y1) = a
+            (x2, y2) = b
+            return abs(x1 - x2) + abs(y1 - y2)
+        # TODO compute heuristic function
+        pass
 
-        return mean(map(lambda x, y: dist(x, y),
-                        self.classify_mark().get('white'),
-                        self.classify_mark().get('black')))
+
+class StateTree:
+    """
+    Contains all possible state of a board.
+    """
+
+    def __init__(self, start_board):
+        self.root = start_board
+
+
+class ArtificialPlayer:
+    """
+    An intelligent agent in the game, which has control over
+    the Board. A search algorithm is implemented in this agent.
+    """
+
+    def __init__(self, data):
+        self.queue = PriorityQueue()
+        self.board = Board(data)
+
+    def goal_achieved(self):
+        return self.board.classify_mark()['black'] == []
