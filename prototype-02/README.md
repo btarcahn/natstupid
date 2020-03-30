@@ -1,5 +1,5 @@
 # prototype-02
-The actual development of assignment, part A. <br>
+The actual development of _Expendibots_ project, part A. <br>
 
 ## Usage
 Contains a module called `search`.

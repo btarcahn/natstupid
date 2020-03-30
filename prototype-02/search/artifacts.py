@@ -51,7 +51,22 @@ class Board:
         Applies the util.print_board method to the instance.
         """
         util_print_board(board_dict=self.to_printable_dict(),
-                         message="instance")
+                         message=str(self.__hash__()))
+
+    def has_same_color(self, x1, y1, x2, y2):
+        """
+        Returns true if the two stacks at the given coordinates
+        contain pieces having the same color.
+        :param x1: the x-coordinate of stack 1.
+        :param y1: the y-coordinate of stack 1.
+        :param x2: the x-coordinate of stack 2.
+        :param y2: the y-coordinate of stack 2.
+        """
+        color1 = None if self.board[x1][y1] is None \
+            else self.board[x1][y1][0]
+        color2 = None if self.board[x2][y2] is None \
+            else self.board[x2][y2][0]
+        return color1 == color2
 
     def boom(self, start_x, start_y):
         """
@@ -87,3 +102,71 @@ class Board:
         if start_x < 0 and start_y > Board.SIZE_INDEX \
                 and self.board[start_x + 1][start_y - 1] is not None:
             self.boom(start_x + 1, start_y - 1)
+
+    def move_horizontally(self, start_x, start_y, n, dx):
+        """
+        Moves pieces currently in the place of origin, horizontally.
+        This movement follows the rules in Expendibots. An exception
+        is thrown if any of these rules is violated.
+
+        :param start_x: the x-coordinate of the place of origin.
+        :param start_y: the y-coordinate of the place of origin.
+        :param n: number of pieces to be moved.
+        :param dx: the horizontal displacement.
+        """
+        if self.board[start_x][start_y] is None or dx == 0 or n <= 0:
+            return
+
+        # Check if the movement is doable
+        if self.board[start_x][start_y][1] < abs(dx):
+            raise IndexError('Insufficient pieces to perform movement.')
+        if not start_x + dx in range(0, Board.SIZE):
+            raise IndexError('Invalid movement (out of board).')
+
+        # Destination found
+        if self.board[start_x + dx][start_y] is None:
+            self.board[start_x + dx][start_y] = [self.board[start_x][start_y][0], n]
+            self.board[start_x][start_y][1] -= n
+            if self.board[start_x][start_y][1] == 0:
+                self.board[start_x][start_y] = None
+        elif self.has_same_color(start_x, start_y, start_x + dx, start_y):
+            self.board[start_x + dx][start_y][1] += n
+            self.board[start_x][start_y][1] -= n
+            if self.board[start_x][start_y][1] == 0:
+                self.board[start_x][start_y] = None
+        else:
+            raise IndexError('Invalid movemnet (opponent is present).')
+
+    def move_vertically(self, start_x, start_y, n, dy):
+        """
+        Moves pieces currently in the place of origin, vertically.
+        This movement follows the rules in Expendibots. An exception
+        is thrown if any of these rules is violated.
+
+        :param start_x: the x-coordinate of the place of origin.
+        :param start_y: the y-coordinate of the place of origin.
+        :param n: number of pieces to be moved.
+        :param dy: the vertical displacement.
+        """
+        if self.board[start_x][start_y] is None or dy == 0 or n <= 0:
+            return
+
+        # Check if the movement is doable
+        if self.board[start_x][start_y][1] < abs(dy):
+            raise IndexError('Insufficient pieces to perform movement.')
+        if not start_y + dy in range(0, Board.SIZE):
+            raise IndexError('Invalid movement (out of board).')
+
+        # Destination found
+        if self.board[start_x][start_y + dy] is None:
+            self.board[start_x][start_y + dy] = [self.board[start_x][start_y][0], n]
+            self.board[start_x][start_y][1] -= n
+            if self.board[start_x][start_y][1] == 0:
+                self.board[start_x][start_y] = None
+        elif self.has_same_color(start_x, start_y, start_x, start_y + dy):
+            self.board[start_x][start_y + dy][1] += n
+            self.board[start_x][start_y][1] -= n
+            if self.board[start_x][start_y][1] == 0:
+                self.board[start_x][start_y] = None
+        else:
+            raise IndexError('Invalid movemnet (opponent is present).')
