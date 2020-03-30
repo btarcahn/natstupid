@@ -8,6 +8,8 @@ Note: this file currently follows Python 3.Board.SIZE syntax.
 
 from .util import print_board as util_print_board
 from collections import defaultdict
+from math import sqrt
+from statistics import mean
 
 __author__ = 'Natural Stupidity'
 __copyright__ = '© 2020 Natural Stupidity, Expendibots Game'
@@ -51,7 +53,7 @@ class Board:
         Applies the util.print_board method to the instance.
         """
         util_print_board(board_dict=self.to_printable_dict(),
-                         message=str(self.__hash__()))
+                         message=str(self.dist_white_to_black()))
 
     def has_same_color(self, x1, y1, x2, y2):
         """
@@ -169,4 +171,29 @@ class Board:
             if self.board[start_x][start_y][1] == 0:
                 self.board[start_x][start_y] = None
         else:
-            raise IndexError('Invalid movemnet (opponent is present).')
+            raise IndexError('Invalid movement (opponent is present).')
+
+    def classify_mark(self) -> dict:
+        coords = defaultdict()
+        for i in range(0, Board.SIZE_INDEX):
+            for j in range(0, Board.SIZE_INDEX):
+                if self.board[i][j] is None:
+                    pass
+                elif self.board[i][j][0] == 'white':
+                    coords['white'] = (i, j)
+                elif self.board[i][j][0] == 'black':
+                    coords['black'] = (i, j)
+        return coords
+
+    def dist_white_to_black(self):
+        # TODO have not test/documented this function
+        # TODO Probably it's wrong...
+        def dist(a, b):
+            assert a is tuple and b is tuple
+            (x, y) = a
+            (u, v) = b
+            return sqrt((x - u) ** 2 + (y - v) ** 2)
+
+        return mean(map(lambda x, y: dist(x, y),
+                        self.classify_mark().get('white'),
+                        self.classify_mark().get('black')))
