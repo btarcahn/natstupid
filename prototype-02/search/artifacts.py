@@ -20,8 +20,9 @@ class Board:
     Represents a board of the game, technically a 8 x 8 matrix.
     :param data: the dictionary provided as in __main.py__ file
     """
+
     def __init__(self, data):
-        self.board = [[[None, 0] for j in range(0, 7)] for i in range(0, 7)]
+        self.board = [[None for j in range(0, 7)] for i in range(0, 7)]
         whites = data['white']
         blacks = data['black']
         for pile in whites:
@@ -40,7 +41,7 @@ class Board:
         printable_dict = defaultdict()
         for i in range(0, 7):
             for j in range(0, 7):
-                if self.board[i][j][0] is not None:
+                if self.board[i][j] is not None:
                     printable_dict[(i, j)] = self.board[i][j]
         return printable_dict
 
@@ -57,14 +58,29 @@ class Board:
         :param start_x: the x-coordinate of the starting point
         :param start_y: the y-coordinate of the starting point.
         """
-        self.board[start_x][start_y] = [None, 0]
-        if 0 < start_x < 7 and 0 < start_y < 7:
-            self.boom(start_x+1, y)
-            self.boom(start_x-1, y)
-            self.boom(start_x, y+1)
-            self.boom(start_x, y-1)
-            self.boom(start_x+1, start_y+1)
-            self.boom(start_x-1, start_y-1)
-            self.boom(start_x+1, start_y-1)
-            self.boom(start_x-1, start_y+1)
-        # TODO enumerate other cases
+
+        self.board[start_x][start_y] = None
+
+        # Up, down, left, right corners
+        if start_y < 7 and self.board[start_x][start_y + 1] is not None:
+            self.boom(start_x, start_y + 1)
+        if start_y > 0 and self.board[start_x][start_y - 1] is not None:
+            self.boom(start_x, start_y - 1)
+        if start_x > 0 and self.board[start_x - 1][start_y] is not None:
+            self.boom(start_x - 1, start_y)
+        if start_x < 7 and self.board[start_x + 1][start_y] is not None:
+            self.boom(start_x + 1, start_y)
+
+        # Diagonal corners
+        if start_x > 0 and start_y > 0 \
+                and self.board[start_x - 1][start_y - 1] is not None:
+            self.boom(start_x - 1, start_y - 1)
+        if start_x < 7 and start_y < 7 \
+                and self.board[start_x + 1][start_y + 1] is not None:
+            self.boom(start_x + 1, start_y + 1)
+        if start_x > 0 and start_y < 7 \
+                and self.board[start_x - 1][start_y + 1] is not None:
+            self.boom(start_x - 1, start_y + 1)
+        if start_x < 0 and start_y > 7 \
+                and self.board[start_x + 1][start_y - 1] is not None:
+            self.boom(start_x + 1, start_y - 1)
