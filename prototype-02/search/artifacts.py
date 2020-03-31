@@ -9,6 +9,7 @@ Note: this file currently follows Python 3.Board.SIZE syntax.
 from .util import print_board as util_print_board
 from collections import defaultdict
 from queue import PriorityQueue
+from copy import deepcopy
 
 __author__ = 'Natural Stupidity'
 __copyright__ = '© 2020 Natural Stupidity, Expendibots Game'
@@ -58,7 +59,7 @@ class Board:
         Applies the util.print_board method to the instance.
         """
         util_print_board(board_dict=self.to_printable_dict(),
-                         message=str(self.dist_white_to_black()))
+                         message=self.__hash__())
 
     def has_same_color(self, x1, y1, x2, y2):
         """
@@ -185,9 +186,11 @@ class Board:
                 if self.board[i][j] is None:
                     pass
                 elif self.board[i][j][0] == 'white':
-                    coords['white'].append((i, j))
+                    coords['white']\
+                        .append((self.board[i][j][1], i, j))
                 elif self.board[i][j][0] == 'black':
-                    coords['black'].append((i, j))
+                    coords['black']\
+                        .append((self.board[i][j][1], i, j))
         return coords
 
     def heuristic(self):
@@ -202,24 +205,77 @@ class Board:
         pass
 
 
-class StateTree:
+class StateNode:
     """
-    Contains all possible state of a board.
+    A graph node that contains a core value (which is
+    of type Board), and a list of next nodes. This is
+    a recursive data structure.
     """
 
-    def __init__(self, start_board):
-        self.root = start_board
+    def __init__(self, board):
+        self.value = board
+        self.next_states = []
+
+    def __str__(self) -> str:
+        return self.value.__str__()
+
+    def append_next_state(self, next_state):
+        """
+        Adds a new, adjacent node to this current node.
+        This is also known as a graph expansion.
+        :param next_state: the next node to be added
+        to the list.
+        """
+        self.next_states.append(next_state)
 
 
 class ArtificialPlayer:
     """
     An intelligent agent in the game, which has control over
     the Board. A search algorithm is implemented in this agent.
+    The agent also has information about the goal state.
     """
 
     def __init__(self, data):
         self.queue = PriorityQueue()
-        self.board = Board(data)
+        self.start_state = StateNode(Board(data))
 
-    def goal_achieved(self):
-        return self.board.classify_mark()['black'] == []
+    @staticmethod
+    def goal_function(state):
+        """
+        Check the state (of StateNode type), and returns True
+        if that state is a winning state.
+        :param state: the state to be checked.
+        """
+        assert state is Board
+        return state.classify_mark['black'] == []
+
+    @staticmethod
+    def get_next_states(current_state):
+        """
+        Given a current state (which is in StateNode) type,
+        finds all next possible states, and attachs them to
+        this current state. This is the specific implementation
+        of the graph expansion algorithm, in the Expendibots game.
+        :param current_state: the current state to be expanded.
+        """
+        # TODO keep track of previous states! Otherwise, we have cycles.
+        assert current_state is StateNode
+        next_states = []
+        all_whites = current_state.value.classify_mark()['white']
+        for white_pos in all_whites:
+            # Move in 4 directions, each time create a new state
+            for i in range(-white_pos[0], white_pos[0] + 1):
+                h_new_state \
+                    = v_new_state = deepcopy(current_state)
+                assert h_new_state is not v_new_state
+                # TODO further parameterize these statements
+                h_new_state.move_horizontally(white_pos[1], white_pos[2], i, i)
+                v_new_state.move_horizontally(white_pos[1], white_pos[2], i, i)
+                next_states.append(h_new_state)
+                next_states.append(v_new_state)
+            # Boom, each time create a new state
+            b_new_state = deepcopy(current_state)
+            b_new_state.boom(white_pos[1], white_pos[2])
+            next_states.append(b_new_state)
+        return next_states
