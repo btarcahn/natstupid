@@ -59,7 +59,8 @@ class Board:
         Applies the util.print_board method to the instance.
         """
         util_print_board(board_dict=self.to_printable_dict(),
-                         message=self.__hash__())
+                         message=self.__hash__(),
+                         compact=False)
 
     def has_same_color(self, x1, y1, x2, y2):
         """
@@ -133,7 +134,8 @@ class Board:
 
         # Destination found
         if self.board[start_x + dx][start_y] is None:
-            self.board[start_x + dx][start_y] = [self.board[start_x][start_y][0], n]
+            self.board[start_x + dx][start_y] = \
+                [self.board[start_x][start_y][0], n]
             self.board[start_x][start_y][1] -= n
             if self.board[start_x][start_y][1] == 0:
                 self.board[start_x][start_y] = None
@@ -254,7 +256,7 @@ class ArtificialPlayer:
     def get_next_states(current_state):
         """
         Given a current state (which is in StateNode) type,
-        finds all next possible states, and attachs them to
+        finds all next possible states, and attaches them to
         this current state. This is the specific implementation
         of the graph expansion algorithm, in the Expendibots game.
         :param current_state: the current state to be expanded.
@@ -266,12 +268,13 @@ class ArtificialPlayer:
         for white_pos in all_whites:
             # Move in 4 directions, each time create a new state
             for i in range(-white_pos[0], white_pos[0] + 1):
-                h_new_state \
-                    = v_new_state = deepcopy(current_state)
-                assert h_new_state is not v_new_state
+                h_new_state = deepcopy(current_state)
+                v_new_state = deepcopy(current_state)
                 # TODO further parameterize these statements
-                h_new_state.move_horizontally(white_pos[1], white_pos[2], i, i)
-                v_new_state.move_horizontally(white_pos[1], white_pos[2], i, i)
+                h_new_state.move_horizontally(white_pos[1],
+                                              white_pos[2], abs(i), i)
+                v_new_state.move_vertically(white_pos[1],
+                                            white_pos[2], abs(i), i)
                 next_states.append(h_new_state)
                 next_states.append(v_new_state)
             # Boom, each time create a new state
