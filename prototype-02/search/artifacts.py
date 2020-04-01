@@ -183,8 +183,8 @@ class Board:
 
     def classify_mark(self) -> dict:
         coords = {'white': [], 'black': []}
-        for i in range(0, Board.SIZE_INDEX):
-            for j in range(0, Board.SIZE_INDEX):
+        for i in range(0, Board.SIZE):
+            for j in range(0, Board.SIZE):
                 if self.board[i][j] is None:
                     pass
                 elif self.board[i][j][0] == 'white':
@@ -241,6 +241,7 @@ class ArtificialPlayer:
     def __init__(self, data):
         self.queue = PriorityQueue()
         self.start_state = StateNode(Board(data))
+        self.known_states = []
 
     @staticmethod
     def goal_function(state):
@@ -262,23 +263,29 @@ class ArtificialPlayer:
         :param current_state: the current state to be expanded.
         """
         # TODO keep track of previous states! Otherwise, we have cycles.
-        assert current_state is StateNode
         next_states = []
         all_whites = current_state.value.classify_mark()['white']
         for white_pos in all_whites:
             # Move in 4 directions, each time create a new state
-            for i in range(-white_pos[0], white_pos[0] + 1):
-                h_new_state = deepcopy(current_state)
-                v_new_state = deepcopy(current_state)
-                # TODO further parameterize these statements
-                h_new_state.move_horizontally(white_pos[1],
-                                              white_pos[2], abs(i), i)
-                v_new_state.move_vertically(white_pos[1],
-                                            white_pos[2], abs(i), i)
-                next_states.append(h_new_state)
-                next_states.append(v_new_state)
+            for i in range(1, white_pos[0] + 1):
+                for j in range(-i, i + 1):
+                    h_new_state = deepcopy(current_state.value)
+                    v_new_state = deepcopy(current_state.value)
+                    # TODO further parameterize these statements
+                    try:
+                        h_new_state.move_horizontally(white_pos[1],
+                                                      white_pos[2], abs(i), j)
+                        next_states.append(h_new_state)
+                    except IndexError:
+                        pass
+                    try:
+                        v_new_state.move_vertically(white_pos[1],
+                                                    white_pos[2], abs(i), j)
+                        next_states.append(v_new_state)
+                    except IndexError:
+                        pass
             # Boom, each time create a new state
-            b_new_state = deepcopy(current_state)
+            b_new_state = deepcopy(current_state.value)
             b_new_state.boom(white_pos[1], white_pos[2])
             next_states.append(b_new_state)
         return next_states
