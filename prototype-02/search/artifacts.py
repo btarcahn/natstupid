@@ -80,6 +80,8 @@ class Board:
     def boom(self, start_x, start_y):
         """
         Initiates an EXPLOSION with a starting point.
+        An explosion (or boom action) follows the rules of
+        the Expendibots game.
         :param start_x: the x-coordinate of the starting point
         :param start_y: the y-coordinate of the starting point.
         """
@@ -182,6 +184,11 @@ class Board:
             raise IndexError('Invalid movement (opponent is present).')
 
     def classify_mark(self) -> dict:
+        """
+        Returns a dictionary consisting 2 keys: 'black', and 'white'.
+        The values are 2 lists of tuple contains the following:
+        (number_of_pieces, x_coord, y_coord).
+        """
         coords = {'white': [], 'black': []}
         for i in range(0, Board.SIZE):
             for j in range(0, Board.SIZE):
@@ -199,7 +206,6 @@ class Board:
         def dist(a, b):
             print(a + '\n')
             print(b + '\n')
-            assert a is tuple and b is tuple
             (x1, y1) = a
             (x2, y2) = b
             return abs(x1 - x2) + abs(y1 - y2)
@@ -241,7 +247,7 @@ class ArtificialPlayer:
     def __init__(self, data):
         self.queue = PriorityQueue()
         self.start_state = StateNode(Board(data))
-        self.known_states = []
+        self.known_states = set()
 
     @staticmethod
     def goal_function(state):
@@ -250,19 +256,18 @@ class ArtificialPlayer:
         if that state is a winning state.
         :param state: the state to be checked.
         """
-        assert state is Board
         return state.classify_mark['black'] == []
 
     @staticmethod
     def get_next_states(current_state):
         """
-        Given a current state (which is in StateNode) type,
-        finds all next possible states, and attaches them to
-        this current state. This is the specific implementation
-        of the graph expansion algorithm, in the Expendibots game.
+        Determines all possible next states from a current state,
+        by applying the moving rules of the Expendibots game. This
+        includes moving the pieces up, down, left, right, and
+        performing any possible boom action. This is a static method,
+        therefore does NOT keep track of any previous states.
         :param current_state: the current state to be expanded.
         """
-        # TODO keep track of previous states! Otherwise, we have cycles.
         next_states = []
         all_whites = current_state.value.classify_mark()['white']
         for white_pos in all_whites:
@@ -271,7 +276,6 @@ class ArtificialPlayer:
                 for j in range(-i, i + 1):
                     h_new_state = deepcopy(current_state.value)
                     v_new_state = deepcopy(current_state.value)
-                    # TODO further parameterize these statements
                     try:
                         h_new_state.move_horizontally(white_pos[1],
                                                       white_pos[2], abs(i), j)
@@ -289,3 +293,28 @@ class ArtificialPlayer:
             b_new_state.boom(white_pos[1], white_pos[2])
             next_states.append(b_new_state)
         return next_states
+
+    def __expand_graph__(self, current_state):
+        """
+        Internal, recursive method for the graph expansion of
+        the intelligent agent. Calling this method recursively
+        results in a graph of all possible states. The method
+        is designed to use within the ArtificialPlayer class only.
+        :param current_state: the origin state of the expansion.
+        """
+        next_potentials = self.get_next_states(current_state)
+        current_state.next_states = [state for state in next_potentials
+                                        if state not in self.known_states]
+        for potential in next_potentials:
+            self.known_states.add(potential)
+        for next_state in current_state.next_states:
+            self.__expand_graph__(next_state)
+
+    def expand_graph(self):
+        """
+        Starts recursive graph expansion, results in a graph
+        of all possible next states. The algorithm starts
+        at the start_state attribute determined by the
+        AritificialPlayer instance.
+        """
+        self.__expand_graph__(self.start_state)
