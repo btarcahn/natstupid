@@ -281,7 +281,7 @@ class ArtificialPlayer:
         if that state is a winning state.
         :param state: the state to be checked.
         """
-        return state.classify_mark['black'] == []
+        return state.value.classify_mark().get('black') == []
 
     @staticmethod
     def get_next_states(current_state):
@@ -304,19 +304,22 @@ class ArtificialPlayer:
                     try:
                         h_new_state.move_horizontally(white_pos[1],
                                                       white_pos[2], abs(i), j)
-                        next_states.append(h_new_state)
                     except IndexError:
                         pass
                     try:
                         v_new_state.move_vertically(white_pos[1],
                                                     white_pos[2], abs(i), j)
-                        next_states.append(v_new_state)
                     except IndexError:
                         pass
+                    if h_new_state != current_state.value:
+                        next_states.append(StateNode(h_new_state))
+                    if v_new_state != current_state.value:
+                        next_states.append(StateNode(v_new_state))
+
             # Boom, each time create a new state
             b_new_state = deepcopy(current_state.value)
             b_new_state.boom(white_pos[1], white_pos[2])
-            next_states.append(b_new_state)
+            next_states.append(StateNode(b_new_state))
         return next_states
 
     def __expand_graph__(self, current_state):
@@ -327,11 +330,11 @@ class ArtificialPlayer:
         is designed to use within the ArtificialPlayer class only.
         :param current_state: the origin state of the expansion.
         """
+        self.known_states.add(current_state)
+        print(self.known_states.__len__())
         next_potentials = self.get_next_states(current_state)
         current_state.next_states = [state for state in next_potentials
                                      if state not in self.known_states]
-        for potential in next_potentials:
-            self.known_states.add(potential)
         for next_state in current_state.next_states:
             self.__expand_graph__(next_state)
 

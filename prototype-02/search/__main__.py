@@ -14,6 +14,7 @@ def main():
         print("From this state, there are "
               + str(player.get_next_states(player.start_state).__len__())
               + " posible next states.")
+        player.expand_graph()
     # TODO: find and print winning action sequence
 
 
