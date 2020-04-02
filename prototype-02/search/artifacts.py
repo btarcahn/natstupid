@@ -3,7 +3,7 @@
 """
 File: artifacts.py
 Contains game artifacts for the Expendibots game.
-Note: this file currently follows Python 3.Board.SIZE syntax.
+Note: this file currently follows Python 3.7 syntax.
 """
 
 from .util import print_board as util_print_board
@@ -41,6 +41,18 @@ class Board:
 
     def __str__(self) -> str:
         return self.board.__str__()
+
+    def __eq__(self, o: object) -> bool:
+        return isinstance(o, Board) and\
+               self.board.__eq__(o.board)
+
+    def __ne__(self, o: object) -> bool:
+        if not isinstance(o, Board):
+            return True
+        return self.board.__ne__(o.board)
+
+    def __hash__(self) -> int:
+        return str(self.board).__hash__()
 
     def to_printable_dict(self) -> dict:
         """
@@ -195,10 +207,10 @@ class Board:
                 if self.board[i][j] is None:
                     pass
                 elif self.board[i][j][0] == 'white':
-                    coords['white']\
+                    coords['white'] \
                         .append((self.board[i][j][1], i, j))
                 elif self.board[i][j][0] == 'black':
-                    coords['black']\
+                    coords['black'] \
                         .append((self.board[i][j][1], i, j))
         return coords
 
@@ -209,6 +221,7 @@ class Board:
             (x1, y1) = a
             (x2, y2) = b
             return abs(x1 - x2) + abs(y1 - y2)
+
         # TODO compute heuristic function
         pass
 
@@ -226,6 +239,18 @@ class StateNode:
 
     def __str__(self) -> str:
         return self.value.__str__()
+
+    def __eq__(self, o: object) -> bool:
+        return isinstance(o, StateNode) \
+               and self.value.__eq__(o.value)
+
+    def __ne__(self, o: object) -> bool:
+        if not isinstance(o, StateNode):
+            return True
+        return self.value.__ne__(o.value)
+
+    def __hash__(self) -> int:
+        return self.value.__hash__()
 
     def append_next_state(self, next_state):
         """
@@ -304,7 +329,7 @@ class ArtificialPlayer:
         """
         next_potentials = self.get_next_states(current_state)
         current_state.next_states = [state for state in next_potentials
-                                        if state not in self.known_states]
+                                     if state not in self.known_states]
         for potential in next_potentials:
             self.known_states.add(potential)
         for next_state in current_state.next_states:
