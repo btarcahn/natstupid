@@ -10,11 +10,14 @@ from .util import print_board as util_print_board
 from collections import defaultdict
 from queue import PriorityQueue
 from copy import deepcopy
+from sys import setrecursionlimit
 
 __author__ = 'Natural Stupidity'
 __copyright__ = '© 2020 Natural Stupidity, Expendibots Game'
 __version__ = '1.0'
 __email__ = 'b.tran17@student.unimelb.edu.au'
+
+setrecursionlimit(10000)
 
 
 class Board:
