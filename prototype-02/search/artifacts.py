@@ -234,6 +234,10 @@ class Board:
 
 
 class DistTools:
+    """
+    Quick static methods calculating simple distances
+    on a 2D surface.
+    """
     @staticmethod
     def manhattan(a: tuple, b: tuple):
         (x1, y1) = a
@@ -381,6 +385,11 @@ class ArtificialPlayer:
 
     @staticmethod
     def heuristic(state: StateNode):
+        """
+        Calculates the heuristic of a given state.
+        Formula: sum(total_whites_on_that_coord *
+                sum(manhattan_dist_to_all_blacks))
+        """
         total = 0
         coords = state.value.classify_mark()
         for white in coords['white']:
@@ -388,31 +397,54 @@ class ArtificialPlayer:
                 total += white[0] * DistTools.manhattan((white[1], white[2]), (black[1], black[2]))
         return total
 
-    def __depth_search__(self, current_node: StateNode, going_deeper, threshold):
+    def __ids__(self, current_node: StateNode, going_deeper, threshold):
+        """
+        The implementation of the iterative deepening depth first search,
+        with a simple heuristic supplied from the environment.
+        :param current_node: the node where the algorithm starts.
+        :param going_deeper: the cut-off depth remaining, the search stops
+        when this parameter reaches zero.
+        :param threshold: the heuristic value, any node that has the heuristic
+        value greater than the threshold is ignored.
+        """
+
+        # Goal reached, add final step to the stack.
         if self.goal_function(current_node):
             self.stack.append(current_node.action_taken)
-            # print(current_node.action_taken)
             return True
 
+        # Depth cut-off reached, or moving too faraway from the black pieces.
         if going_deeper <= 0 or self.heuristic(current_node) > threshold:
             return False
 
+        # Not there yet, expanding next possible states and reduce
+        # the threshold (heuristic value)
         current_node.next_states = self.get_next_states(current_node)
         new_threshold = self.heuristic(current_node)
+
+        # Deepening the search algorithm
         for next_state in current_node.next_states:
-            if self.__depth_search__(next_state, going_deeper - 1, new_threshold):
+            if self.__ids__(next_state, going_deeper - 1, new_threshold):
                 self.stack.append(current_node.action_taken)
                 # print(current_node.action_taken)
                 return True
         return False
 
-    def ids_control(self):
+    def start_searching(self, max_depth=250):
+        """
+        Initialize the search algorithm implemented in the
+        Artificial Player. The maximum depth for this search
+        is set to 250 by default.
+        :param max_depth: the maximum depth allowed. If this
+        depth is reached, the search will stop, and assume
+        that the goal is unreachable.
+        """
         depth = 0
         threshold = self.heuristic(self.start_state)
-        while self.__depth_search__(self.start_state, depth, threshold) is False:
+        while self.__ids__(self.start_state, depth, threshold) is False:
             depth += 1
-            if depth > 250:
-                print('Maximum depth of 250 exceeded. Assume failure.')
+            if depth > max_depth:
+                print('Maximum depth of {} exceeded. Assume failure.'.format(max_depth))
                 break
         self.stack.pop()
         while self.stack:
