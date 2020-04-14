@@ -334,7 +334,6 @@ class ArtificialPlayer:
         :param current_state: the origin state of the expansion.
         """
         self.known_states.add(current_state)
-        print(self.known_states.__len__())
         next_potentials = self.get_next_states(current_state)
         current_state.next_states = [state for state in next_potentials
                                      if state not in self.known_states]
