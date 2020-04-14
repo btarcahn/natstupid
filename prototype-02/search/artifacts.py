@@ -232,13 +232,12 @@ class Board:
 class StateNode:
     """
     A graph node that contains a core value (which is
-    of type Board), and a list of next nodes. This is
-    a recursive data structure.
+    of type Board), and a list of adjacent nodes.
     """
 
     def __init__(self, board):
         self.value = board
-        self.next_states = []
+        self.next_states = set()
 
     def __str__(self) -> str:
         return self.value.__str__()
@@ -255,15 +254,6 @@ class StateNode:
     def __hash__(self) -> int:
         return self.value.__hash__()
 
-    def append_next_state(self, next_state):
-        """
-        Adds a new, adjacent node to this current node.
-        This is also known as a graph expansion.
-        :param next_state: the next node to be added
-        to the list.
-        """
-        self.next_states.append(next_state)
-
 
 class ArtificialPlayer:
     """
@@ -276,6 +266,7 @@ class ArtificialPlayer:
         self.queue = PriorityQueue()
         self.start_state = StateNode(Board(data))
         self.known_states = set()
+        self.max_depth = 0
 
     @staticmethod
     def goal_function(state):
@@ -287,7 +278,7 @@ class ArtificialPlayer:
         return state.value.classify_mark().get('black') == []
 
     @staticmethod
-    def get_next_states(current_state):
+    def get_next_states(current_state: StateNode):
         """
         Determines all possible next states from a current state,
         by applying the moving rules of the Expendibots game. This
@@ -296,7 +287,7 @@ class ArtificialPlayer:
         therefore does NOT keep track of any previous states.
         :param current_state: the current state to be expanded.
         """
-        next_states = []
+        next_states = set()
         all_whites = current_state.value.classify_mark()['white']
         for white_pos in all_whites:
             # Move in 4 directions, each time create a new state
@@ -315,36 +306,59 @@ class ArtificialPlayer:
                     except IndexError:
                         pass
                     if h_new_state != current_state.value:
-                        next_states.append(StateNode(h_new_state))
+                        next_states.add(StateNode(h_new_state))
                     if v_new_state != current_state.value:
-                        next_states.append(StateNode(v_new_state))
+                        next_states.add(StateNode(v_new_state))
 
             # Boom, each time create a new state
             b_new_state = deepcopy(current_state.value)
             b_new_state.boom(white_pos[1], white_pos[2])
-            next_states.append(StateNode(b_new_state))
+            next_states.add(StateNode(b_new_state))
         return next_states
 
-    def __expand_graph__(self, current_state):
-        """
-        Internal, recursive method for the graph expansion of
-        the intelligent agent. Calling this method recursively
-        results in a graph of all possible states. The method
-        is designed to use within the ArtificialPlayer class only.
-        :param current_state: the origin state of the expansion.
-        """
-        self.known_states.add(current_state)
-        next_potentials = self.get_next_states(current_state)
-        current_state.next_states = [state for state in next_potentials
-                                     if state not in self.known_states]
-        for next_state in current_state.next_states:
-            self.__expand_graph__(next_state)
+    # def __expand_graph__(self, current_state):
+    #     """
+    #     Internal, recursive method for the graph expansion of
+    #     the intelligent agent. Calling this method recursively
+    #     results in a graph of all possible states. The method
+    #     is designed to use within the ArtificialPlayer class only.
+    #     :param current_state: the origin state of the expansion.
+    #     """
+    #     self.known_states.add(current_state)
+    #     next_potentials = self.get_next_states(current_state)
+    #     current_state.next_states = [state for state in next_potentials
+    #                                  if state not in self.known_states]
+    #     for next_state in current_state.next_states:
+    #         self.__expand_graph__(next_state)
+    #
+    # def expand_graph(self):
+    #     """
+    #     Starts recursive graph expansion, results in a graph
+    #     of all possible next states. The algorithm starts
+    #     at the start_state attribute determined by the
+    #     AritificialPlayer instance.
+    #     """
+    #     self.__expand_graph__(self.start_state)
 
-    def expand_graph(self):
-        """
-        Starts recursive graph expansion, results in a graph
-        of all possible next states. The algorithm starts
-        at the start_state attribute determined by the
-        AritificialPlayer instance.
-        """
-        self.__expand_graph__(self.start_state)
+    def __depth_search__(self, current_node: StateNode, going_deeper):
+        if self.goal_function(current_node):
+            current_node.value.print_board()
+            return True
+
+        if going_deeper <= 0:
+            return False
+
+        current_node.next_states = self.get_next_states(current_node)
+        for next_state in current_node.next_states:
+            if self.__depth_search__(next_state, going_deeper - 1):
+                return True
+        return False
+
+    def ids_control(self):
+        depth = 0
+        print("init search")
+        while self.__depth_search__(self.start_state, depth) is False:
+            print(depth)
+            depth += 1
+            self.__depth_search__(self.start_state, depth)
+
