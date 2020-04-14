@@ -11,6 +11,7 @@ from collections import defaultdict
 from queue import PriorityQueue
 from copy import deepcopy
 from sys import setrecursionlimit
+from math import sqrt
 
 __author__ = 'Natural Stupidity'
 __copyright__ = '© 2020 Natural Stupidity, Expendibots Game'
@@ -46,7 +47,7 @@ class Board:
         return self.board.__str__()
 
     def __eq__(self, o: object) -> bool:
-        return isinstance(o, Board) and\
+        return isinstance(o, Board) and \
                self.board.__eq__(o.board)
 
     def __ne__(self, o: object) -> bool:
@@ -217,16 +218,57 @@ class Board:
                         .append((self.board[i][j][1], i, j))
         return coords
 
-    def heuristic(self):
-        def dist(a, b):
-            print(a + '\n')
-            print(b + '\n')
-            (x1, y1) = a
-            (x2, y2) = b
-            return abs(x1 - x2) + abs(y1 - y2)
 
-        # TODO compute heuristic function
-        pass
+class DistTools:
+    @staticmethod
+    def manhattan(a: tuple, b: tuple):
+        (x1, y1) = a
+        (x2, y2) = b
+        return abs(x1 - x2) + abs(y1 - y2)
+
+    @staticmethod
+    def euclidean(a: tuple, b: tuple):
+        (x1, y1) = a
+        (x2, y2) = b
+        return sqrt((x1 - x2)**2 + (y1 - y2)**2)
+
+
+class Action:
+    """
+    Abstract class of a possible action that can be
+    applied to a Board. An object of this class
+    encapsulates the information on when the Player
+    makes a move (BOOM, or MOVE).
+    """
+    pass
+
+
+class Move(Action):
+    """
+    Encapsulates a MOVE action. To use this class, one must
+    supply two 2-tuples: origin=(x1,y1) and destination=(x2,y2).
+    """
+
+    def __init__(self, n, origin: tuple, destination: tuple):
+        self.n = n
+        self.origin = origin
+        self.destination = destination
+
+    def __str__(self):
+        return "MOVE {} from {} to {}.".format(self.n, self.origin, self.destination)
+
+
+class Boom(Action):
+    """
+    Encapsulates a BOOM action. To use this class, one must
+    supple one 2-tuples: origin=(x,y).
+    """
+
+    def __init__(self, origin: tuple):
+        self.origin = origin
+
+    def __str__(self) -> str:
+        return "BOOM at {}.".format(self.origin)
 
 
 class StateNode:
@@ -235,8 +277,9 @@ class StateNode:
     of type Board), and a list of adjacent nodes.
     """
 
-    def __init__(self, board):
+    def __init__(self, board: Board, action_taken: Action):
         self.value = board
+        self.action_taken = action_taken
         self.next_states = set()
 
     def __str__(self) -> str:
@@ -264,12 +307,12 @@ class ArtificialPlayer:
 
     def __init__(self, data):
         self.queue = PriorityQueue()
-        self.start_state = StateNode(Board(data))
+        self.start_state = StateNode(Board(data), None)
         self.known_states = set()
         self.max_depth = 0
 
     @staticmethod
-    def goal_function(state):
+    def goal_function(state: StateNode):
         """
         Check the state (of StateNode type), and returns True
         if that state is a winning state.
@@ -306,43 +349,26 @@ class ArtificialPlayer:
                     except IndexError:
                         pass
                     if h_new_state != current_state.value:
-                        next_states.add(StateNode(h_new_state))
+                        next_states.add(StateNode(h_new_state,
+                                                  Move(i,
+                                                       (white_pos[1], white_pos[2]),
+                                                       (white_pos[1] + j, white_pos[2]))))
                     if v_new_state != current_state.value:
-                        next_states.add(StateNode(v_new_state))
+                        next_states.add(StateNode(v_new_state,
+                                                  Move(i,
+                                                       (white_pos[1], white_pos[2]),
+                                                       (white_pos[1], white_pos[2] + j))))
 
             # Boom, each time create a new state
             b_new_state = deepcopy(current_state.value)
             b_new_state.boom(white_pos[1], white_pos[2])
-            next_states.add(StateNode(b_new_state))
+            next_states.add(StateNode(b_new_state, Boom((white_pos[1], white_pos[2]))))
         return next_states
-
-    # def __expand_graph__(self, current_state):
-    #     """
-    #     Internal, recursive method for the graph expansion of
-    #     the intelligent agent. Calling this method recursively
-    #     results in a graph of all possible states. The method
-    #     is designed to use within the ArtificialPlayer class only.
-    #     :param current_state: the origin state of the expansion.
-    #     """
-    #     self.known_states.add(current_state)
-    #     next_potentials = self.get_next_states(current_state)
-    #     current_state.next_states = [state for state in next_potentials
-    #                                  if state not in self.known_states]
-    #     for next_state in current_state.next_states:
-    #         self.__expand_graph__(next_state)
-    #
-    # def expand_graph(self):
-    #     """
-    #     Starts recursive graph expansion, results in a graph
-    #     of all possible next states. The algorithm starts
-    #     at the start_state attribute determined by the
-    #     AritificialPlayer instance.
-    #     """
-    #     self.__expand_graph__(self.start_state)
 
     def __depth_search__(self, current_node: StateNode, going_deeper):
         if self.goal_function(current_node):
-            current_node.value.print_board()
+            print(current_node.action_taken)
+            # current_node.value.print_board()
             return True
 
         if going_deeper <= 0:
@@ -351,6 +377,7 @@ class ArtificialPlayer:
         current_node.next_states = self.get_next_states(current_node)
         for next_state in current_node.next_states:
             if self.__depth_search__(next_state, going_deeper - 1):
+                print(current_node.action_taken)
                 return True
         return False
 
@@ -361,4 +388,3 @@ class ArtificialPlayer:
             print(depth)
             depth += 1
             self.__depth_search__(self.start_state, depth)
-

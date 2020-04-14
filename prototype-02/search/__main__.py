@@ -1,14 +1,12 @@
 import sys
 import json
 
-from .artifacts import Board, ArtificialPlayer
-from .util import print_move, print_boom, print_board
+from .artifacts import ArtificialPlayer
 
 
 def main():
     with open(sys.argv[1]) as file:
         data = json.load(file)
-        test_board = Board(data)
         player = ArtificialPlayer(data)
         print("From this state, there are "
               + str(player.get_next_states(player.start_state).__len__())
