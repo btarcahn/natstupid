@@ -7,8 +7,7 @@ Note: this file currently follows Python 3.7 syntax.
 """
 
 from .util import print_board as util_print_board
-from collections import defaultdict
-from queue import PriorityQueue
+from collections import defaultdict, deque
 from copy import deepcopy
 from sys import setrecursionlimit
 from math import sqrt
@@ -321,7 +320,7 @@ class ArtificialPlayer:
     """
 
     def __init__(self, data):
-        self.queue = PriorityQueue()
+        self.stack = deque()
         self.start_state = StateNode(Board(data), None)
         self.known_states = set()
         self.max_depth = 0
@@ -350,7 +349,7 @@ class ArtificialPlayer:
         for white_pos in all_whites:
             # Move in 4 directions, each time create a new state
             for i in range(1, white_pos[0] + 1):
-                for j in range(-i, i + 1):
+                for j in range(-white_pos[0], white_pos[0] + 1):
                     h_new_state = deepcopy(current_state.value)
                     v_new_state = deepcopy(current_state.value)
                     try:
@@ -391,8 +390,8 @@ class ArtificialPlayer:
 
     def __depth_search__(self, current_node: StateNode, going_deeper, threshold):
         if self.goal_function(current_node):
-            print(current_node.action_taken)
-            # current_node.value.print_board()
+            self.stack.append(current_node.action_taken)
+            # print(current_node.action_taken)
             return True
 
         if going_deeper <= 0 or self.heuristic(current_node) > threshold:
@@ -402,7 +401,8 @@ class ArtificialPlayer:
         new_threshold = self.heuristic(current_node)
         for next_state in current_node.next_states:
             if self.__depth_search__(next_state, going_deeper - 1, new_threshold):
-                print(current_node.action_taken)
+                self.stack.append(current_node.action_taken)
+                # print(current_node.action_taken)
                 return True
         return False
 
@@ -414,3 +414,6 @@ class ArtificialPlayer:
             if depth > 250:
                 print('Maximum depth of 250 exceeded. Assume failure.')
                 break
+        self.stack.pop()
+        while self.stack:
+            print(self.stack.pop())
