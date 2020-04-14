@@ -446,6 +446,7 @@ class ArtificialPlayer:
             if depth > max_depth:
                 print('Maximum depth of {} exceeded. Assume failure.'.format(max_depth))
                 break
-        self.stack.pop()
+        if self.stack:
+            self.stack.pop()
         while self.stack:
             print(self.stack.pop())
