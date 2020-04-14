@@ -380,26 +380,37 @@ class ArtificialPlayer:
             next_states.add(StateNode(b_new_state, Boom((white_pos[1], white_pos[2]))))
         return next_states
 
-    def __depth_search__(self, current_node: StateNode, going_deeper):
+    @staticmethod
+    def heuristic(state: StateNode):
+        total = 0
+        coords = state.value.classify_mark()
+        for white in coords['white']:
+            for black in coords['black']:
+                total += white[0] * DistTools.manhattan((white[1], white[2]), (black[1], black[2]))
+        return total
+
+    def __depth_search__(self, current_node: StateNode, going_deeper, threshold):
         if self.goal_function(current_node):
-            # print(current_node.action_taken)
+            print(current_node.action_taken)
             # current_node.value.print_board()
             return True
 
-        if going_deeper <= 0:
+        if going_deeper <= 0 or self.heuristic(current_node) > threshold:
             return False
 
         current_node.next_states = self.get_next_states(current_node)
+        new_threshold = self.heuristic(current_node)
         for next_state in current_node.next_states:
-            if self.__depth_search__(next_state, going_deeper - 1):
+            if self.__depth_search__(next_state, going_deeper - 1, new_threshold):
                 print(current_node.action_taken)
                 return True
         return False
 
     def ids_control(self):
         depth = 0
-        # print("init search")
-        while self.__depth_search__(self.start_state, depth) is False:
-            # print(depth)
+        threshold = self.heuristic(self.start_state)
+        while self.__depth_search__(self.start_state, depth, threshold) is False:
             depth += 1
-            self.__depth_search__(self.start_state, depth)
+            if depth > 250:
+                print('Maximum depth of 250 exceeded. Assume failure.')
+                break
