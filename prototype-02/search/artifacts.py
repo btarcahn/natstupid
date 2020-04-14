@@ -199,23 +199,38 @@ class Board:
         else:
             raise IndexError('Invalid movement (opponent is present).')
 
-    def classify_mark(self) -> dict:
+    def classify_mark(self, num_of_pieces=True) -> dict:
         """
         Returns a dictionary consisting 2 keys: 'black', and 'white'.
+        The value is a list of 2-tuples (x,y) of the piece sitting on
+        that coordinate.
         The values are 2 lists of tuple contains the following:
-        (number_of_pieces, x_coord, y_coord).
+        (number_of_pieces, x_coord, y_coord) if num_of_pieces is False.
+        (x_coord, y_coord) if num_of_pieces is True.
+        :param num_of_pieces: whether number_of_pieces component should
+        be added to the tuple.
         """
         coords = {'white': [], 'black': []}
-        for i in range(0, Board.SIZE):
-            for j in range(0, Board.SIZE):
-                if self.board[i][j] is None:
-                    pass
-                elif self.board[i][j][0] == 'white':
-                    coords['white'] \
-                        .append((self.board[i][j][1], i, j))
-                elif self.board[i][j][0] == 'black':
-                    coords['black'] \
-                        .append((self.board[i][j][1], i, j))
+        if num_of_pieces:
+            for i in range(0, Board.SIZE):
+                for j in range(0, Board.SIZE):
+                    if self.board[i][j] is None:
+                        pass
+                    elif self.board[i][j][0] == 'white':
+                        coords['white'] \
+                            .append((self.board[i][j][1], i, j))
+                    elif self.board[i][j][0] == 'black':
+                        coords['black'] \
+                            .append((self.board[i][j][1], i, j))
+        else:
+            for i in range(0, Board.SIZE):
+                for j in range(0, Board.SIZE):
+                    if self.board[i][j] is None:
+                        pass
+                    elif self.board[i][j][0] == 'white':
+                        coords['white'].append((i, j))
+                    elif self.board[i][j][0] == 'black':
+                        coords['black'].append((i, j))
         return coords
 
 
@@ -367,7 +382,7 @@ class ArtificialPlayer:
 
     def __depth_search__(self, current_node: StateNode, going_deeper):
         if self.goal_function(current_node):
-            print(current_node.action_taken)
+            # print(current_node.action_taken)
             # current_node.value.print_board()
             return True
 
@@ -383,8 +398,8 @@ class ArtificialPlayer:
 
     def ids_control(self):
         depth = 0
-        print("init search")
+        # print("init search")
         while self.__depth_search__(self.start_state, depth) is False:
-            print(depth)
+            # print(depth)
             depth += 1
             self.__depth_search__(self.start_state, depth)
